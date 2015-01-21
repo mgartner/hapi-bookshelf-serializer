@@ -60,3 +60,28 @@ module.exports = {
   roles: Joi.array().includes(Role)
 };
 ```
+
+# Defining Models
+Models are defined just like all [Bookshelf.js](http://bookshelfjs.org/) models, except for one small addition. A ```serializer``` property is added which references a serializer registered with this plugin. The model is matched to a serializer via a string comparison. Below is an example for defining models that could be used with the serializers above.
+
+## Example
+```javascript
+// models/role.js
+var bookshelf = require('bookshelf')(require('knex')(config));
+
+module.exports = bookshelf.Model.extend({
+  tableName: 'roles',
+  serializer: 'role'
+});
+
+// models/user.js
+var bookshelf = require('bookshelf')(require('knex')(config));
+var Role      = require('./role.js');
+
+module.exports = bookshelf.Model.extend({
+  tableName: 'users',
+  serializer: 'user',
+  roles: this.belongsToMany(Role)
+});
+```
+This plugin pairs well with the [hapi-bookshelf-models](https://github.com/lob/hapi-bookshelf-models) plugin which makes registering models from a directory super easy.
