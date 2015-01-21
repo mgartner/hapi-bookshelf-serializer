@@ -1,0 +1,1 @@
+# Hapi Bookshelf Serializer
