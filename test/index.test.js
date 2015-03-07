@@ -1,19 +1,28 @@
-var chai        = require('chai');
-var expect      = chai.expect;
-var Hapi        = require('hapi');
-var path        = require('path');
-var bookshelf   = require('bookshelf')(require('knex')({
+var chai      = require('chai');
+var expect    = chai.expect;
+var Hapi      = require('hapi');
+var path      = require('path');
+var bookshelf = require('bookshelf')(require('knex')({
                   client: 'sqlite3',
                   filename: './test.sqlite3'
                 }));
 
-var TestModel   = bookshelf.Model.extend({
+var TestModel = bookshelf.Model.extend({
   tableName: 'models',
   serializer: 'model'
 });
 
-var TestModels  = bookshelf.Collection.extend({
+var TestModels = bookshelf.Collection.extend({
   model: TestModel
+});
+
+var FunctionModel = bookshelf.Model.extend({
+  tableName: 'functions',
+  serializer: 'function'
+});
+
+var FunctionModels = bookshelf.Collection.extend({
+  model: FunctionModel
 });
 
 describe('serializer plugin', function () {
@@ -100,6 +109,44 @@ describe('serializer plugin', function () {
         expect(res.result).to.eql([
           { id: 1, name: 'test1', object: 'model' },
           { id: 2, name: 'test2', object: 'model' }
+        ]);
+
+        done();
+      });
+    });
+
+    it('should format a function-serialized model', function (done) {
+      server.route({
+        method: 'GET',
+        path: '/functionTest',
+        handler: function (request, reply) {
+          reply(FunctionModel.forge({ id: '1', name: 'hello' }));
+        }
+      });
+
+      server.inject('/functionTest', function (res) {
+        expect(res.result).to.eql({ id: 1, name: 'hello', object: 'function' });
+
+        done();
+      });
+    });
+
+    it('should format a function-serialized collection', function (done) {
+      server.route({
+        method: 'GET',
+        path: '/functionCollectionTest',
+        handler: function (request, reply) {
+          reply(FunctionModels.forge([
+            { id: 1, name: 'test1' },
+            { id: 2, name: 'test2' }
+          ]));
+        }
+      });
+
+      server.inject('/functionCollectionTest', function (res) {
+        expect(res.result).to.eql([
+          { id: 1, name: 'test1', object: 'function' },
+          { id: 2, name: 'test2', object: 'function' }
         ]);
 
         done();
